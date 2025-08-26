@@ -3,15 +3,39 @@ package storage
 import (
 	"context"
 	"fmt"
-	"log"
-	"time"
+	"log/slog"
 
 	"github.com/jackc/pgx/v5/pgxpool"
 )
 
-// Storage Стрктурв пула соединений
+// Storage структура пула соединений
 type Storage struct {
 	DB *pgxpool.Pool
+}
+
+// NewStorage создает новый пул соединений.
+func NewStorage(ctx context.Context) (*Storage, error) {
+	dsn := "postgres://demo_user:demo_password@localhost:5432/demo_db"
+
+	pool, err := pgxpool.New(ctx, dsn)
+	if err != nil {
+		return nil, fmt.Errorf("new pgxpool: %v", err)
+	}
+
+	// Проверим соединение
+	if err = pool.Ping(ctx); err != nil {
+		return nil, fmt.Errorf("ping pgxpool: %v", err)
+	}
+
+	slog.Debug("connected to postgres")
+
+	return &Storage{DB: pool}, nil
+}
+
+// Close завершает соединения.
+func (s *Storage) Close() {
+	s.DB.Close()
+	slog.Debug("disconnected from postgres")
 }
 
 func (s *Storage) SaveLink(code, originalURL string) error {
@@ -31,26 +55,4 @@ func (s *Storage) GetOriginalURL(code string) (string, error) {
 		return "", err
 	}
 	return url, nil
-}
-
-// NewStorage создает новый пул соединений.
-func NewStorage() *Storage {
-	dsn := "postgres://demo_user:demo_password@localhost:5432/demo_db"
-
-	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
-	defer cancel()
-
-	pool, err := pgxpool.New(ctx, dsn)
-	if err != nil {
-		log.Fatalf("Ошибка подключения к базе: %v", err)
-	}
-
-	// Проверим соединение
-	if err = pool.Ping(ctx); err != nil {
-		log.Fatalf("База не отвечает: %v", err)
-	}
-
-	fmt.Println("✅ Подключение к PostgreSQL успешно!")
-
-	return &Storage{DB: pool}
 }

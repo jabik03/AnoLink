@@ -1,24 +1,27 @@
 package main
 
 import (
-	"fmt"
-	"net/http"
+	"context"
+	"log"
+	"os"
+	"os/signal"
 
-	"AnoLink/internal/handlers"
-	"AnoLink/internal/router"
-	"AnoLink/internal/storage"
+	"AnoLink/internal/app"
 )
 
 func main() {
-	fmt.Println("Запуск сервера...")
+	if err := realMain(); err != nil {
+		log.Fatal(err)
+	}
+}
 
-	handlers.GenerateQRCode("https://www.twitch.tv/")
+func realMain() error {
+	ctx, cancel := signal.NotifyContext(context.Background(), os.Interrupt)
+	defer cancel()
 
-	store := storage.NewStorage()
-	defer store.DB.Close()
+	if err := app.Run(ctx); err != nil {
+		return err
+	}
 
-	r := router.SetupRouter(store)
-
-	fmt.Println("Сервер запущен на :8080")
-	http.ListenAndServe(":8080", r)
+	return nil
 }
