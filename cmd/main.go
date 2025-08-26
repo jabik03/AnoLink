@@ -1,11 +1,12 @@
 package main
 
 import (
+	"fmt"
+	"net/http"
+
 	"AnoLink/internal/handlers"
 	"AnoLink/internal/router"
 	"AnoLink/internal/storage"
-	"fmt"
-	"net/http"
 )
 
 func main() {
