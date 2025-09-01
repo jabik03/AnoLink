@@ -65,3 +65,8 @@ func (h *ShortenHandler) HandleRedirect(w http.ResponseWriter, r *http.Request) 
 
 	return nil
 }
+
+//
+//func (h *ShortenHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
+//
+//}
